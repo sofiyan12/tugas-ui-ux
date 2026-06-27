@@ -1,192 +1,363 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import {
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  Calendar,
-  FileText,
-  ChevronDown,
-} from "lucide-react";
+import { useNavigate } from "react-router";
+import { Search, Filter, Eye, Edit, Calendar, FileText, X, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { getReportsByUser, API_BASE_URL } from "../../lib/api";
+
+interface ReportItem {
+  id: string;
+  date: string;
+  class: string;
+  subject: string;
+  topic: string;
+  status: string;
+  attachments: number;
+  createdAt: string;
+  approvedAt?: string;
+}
 
 export function ReportHistoryPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterClass, setFilterClass] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [availableClasses, setAvailableClasses] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/reports")
-      .then((res) => res.json())
-      .then((data) => {
-        setReports(data.map((r: any) => ({
+  const fetchReports = async () => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      navigate("/login");
+      return;
+    }
+    const { id: userId } = JSON.parse(storedUser);
+
+    try {
+      const data = await getReportsByUser(userId);
+      const mapped = data.map((r: any) => {
+        let totalAttachments = 0;
+        try {
+          if (r.attachments) {
+            const parsed = JSON.parse(r.attachments);
+            totalAttachments = Array.isArray(parsed) ? parsed.length : 0;
+          }
+        } catch { totalAttachments = 0; }
+        return {
           id: r.id,
           date: r.date,
           class: r.className,
           subject: r.subject,
           topic: r.learningTopic,
-          status: r.status,
-          attendance: "N/A", // Will need attendance in DB if wanted
-          attachments: r.attachments ? 1 : 0
-        })));
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch reports:", err);
-        setIsLoading(false);
+          status: r.status === "Menunggu Tinjauan" ? "Menunggu Review" : (r.status || "Menunggu Review"),
+          attachments: totalAttachments,
+          createdAt: r.createdAt,
+          approvedAt: r.approvedAt,
+        };
       });
+      setReports(mapped);
+
+      // Kelas dinamis dari data nyata
+      const uniqueClasses = [...new Set(mapped.map((r: ReportItem) => r.class))].filter(Boolean) as string[];
+      setAvailableClasses(uniqueClasses.sort());
+    } catch {
+      toast.error("Gagal menyinkronkan data server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
   }, []);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus laporan ini?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reports/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast.success("Laporan berhasil dihapus");
+      setReports((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      toast.error("Gagal menghapus laporan");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filteredReports = reports.filter((report) => {
     const matchesSearch =
       report.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.class.toLowerCase().includes(searchQuery.toLowerCase());
+      report.class.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.subject.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesClass = filterClass === "all" || report.class === filterClass;
     const matchesStatus = filterStatus === "all" || report.status === filterStatus;
     return matchesSearch && matchesClass && matchesStatus;
   });
 
+  const statusStyle = (status: string) => {
+    if (status === "Selesai") return "bg-green-100 text-green-700";
+    if (status === "Draf") return "bg-gray-100 text-gray-600 border";
+    return "bg-orange-100 text-orange-700";
+  };
+
+  const activeFilterCount = (filterClass !== "all" ? 1 : 0) + (filterStatus !== "all" ? 1 : 0);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground mb-2">Riwayat Laporan</h1>
-          <p className="text-muted-foreground">Lihat dan kelola semua laporan yang Anda kirimkan</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-          <Download className="w-5 h-5" />
-          Ekspor Semua
-        </button>
+    <div className="space-y-4 p-4 md:p-6 max-w-7xl mx-auto">
+
+      {/* ── HEADER ── */}
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Riwayat Laporan Saya</h1>
+        <p className="text-muted-foreground text-sm">
+          {isLoading ? "Memuat..." : `${reports.length} laporan ditemukan`}
+        </p>
       </div>
 
-      {/* Search and Filter */}
-      <div className="bg-card rounded-xl p-6 border border-border">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* ── SEARCH + FILTER ── */}
+      <div className="bg-card rounded-xl p-3 md:p-4 border border-border shadow-sm space-y-3">
+        <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari berdasarkan materi atau kelas..."
-              className="w-full pl-10 pr-4 py-3 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Cari materi, kelas, atau mata pelajaran..."
+              className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-3 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors"
+            className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium border transition-colors
+              ${showFilters ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-foreground border-border"}`}
           >
-            <Filter className="w-5 h-5" />
-            Filter
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
-            />
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
 
+        {/* Filter panel */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="pt-3 border-t border-border grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-foreground mb-2">Filter berdasarkan Kelas</label>
+              <label className="block text-xs font-medium text-foreground mb-1.5">Kelas</label>
               <select
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
-                className="w-full px-4 py-2 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm"
               >
                 <option value="all">Semua Kelas</option>
-                <option value="Kelas 10A">Kelas 10A</option>
-                <option value="Kelas 10B">Kelas 10B</option>
-                <option value="Kelas 11A">Kelas 11A</option>
-                <option value="Kelas 11B">Kelas 11B</option>
+                {availableClasses.map((cls) => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm text-foreground mb-2">Filter berdasarkan Status</label>
+              <label className="block text-xs font-medium text-foreground mb-1.5">Status</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm"
               >
                 <option value="all">Semua Status</option>
+                <option value="Draf">Draf</option>
+                <option value="Menunggu Review">Menunggu Review</option>
                 <option value="Selesai">Selesai</option>
-                <option value="Menunggu Tinjauan">Menunggu Tinjauan</option>
-                <option value="Diarsipkan">Diarsipkan</option>
               </select>
             </div>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setFilterClass("all"); setFilterStatus("all"); }}
+                className="col-span-2 flex items-center justify-center gap-1.5 text-xs text-red-500 hover:text-red-600 font-medium py-1"
+              >
+                <X className="w-3 h-3" /> Reset filter
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Reports Table - Desktop */}
-      <div className="hidden md:block bg-card rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* ── LOADING ── */}
+      {isLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-card rounded-xl border border-border p-4 animate-pulse">
+              <div className="h-4 bg-muted rounded w-1/3 mb-3" />
+              <div className="h-3 bg-muted rounded w-2/3 mb-2" />
+              <div className="h-3 bg-muted rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── EMPTY ── */}
+      {!isLoading && filteredReports.length === 0 && (
+        <div className="bg-card rounded-xl border border-border p-12 text-center">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+          <p className="text-sm font-medium text-foreground">Tidak ada laporan ditemukan</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {reports.length === 0 ? "Anda belum membuat laporan apapun" : "Coba ubah kata kunci atau filter"}
+          </p>
+        </div>
+      )}
+
+      {/* ── MOBILE: CARD LIST ── */}
+      {!isLoading && filteredReports.length > 0 && (
+        <div className="md:hidden space-y-3">
+          {filteredReports.map((report) => (
+            <div
+              key={report.id}
+              className="bg-card rounded-xl border border-border p-4 shadow-sm"
+            >
+              {/* Baris atas: tanggal + status */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(report.date).toLocaleDateString("id-ID", {
+                    day: "numeric", month: "short", year: "numeric"
+                  })}
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusStyle(report.status)}`}>
+                  {report.status}
+                </span>
+              </div>
+
+              <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">{report.topic}</p>
+
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                  {report.class}
+                </span>
+                <span className="text-xs text-muted-foreground">{report.subject}</span>
+              </div>
+
+              {/* Jejak Waktu Audit */}
+              <div className="mt-2.5 pt-2 border-t border-border/40 text-[10px] text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
+                <span>Dibuat: {new Date(report.createdAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}</span>
+                {report.approvedAt && report.status === "Selesai" && (
+                  <span className="text-green-600 font-medium">Disetujui: {new Date(report.approvedAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}</span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <FileText className="w-3.5 h-3.5" />
+                  {report.attachments} lampiran
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => navigate(`/report/${report.id}`)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> Lihat
+                  </button>
+                  {report.status !== "Selesai" && (
+                    <>
+                      <button
+                        onClick={() => navigate(`/create-report?edit=${report.id}`)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(report.id)}
+                        disabled={deletingId === report.id}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── DESKTOP: TABLE ── */}
+      {!isLoading && filteredReports.length > 0 && (
+        <div className="hidden md:block bg-card rounded-xl border border-border overflow-hidden shadow-sm">
           <table className="w-full">
-            <thead className="bg-muted">
+            <thead className="bg-muted text-muted-foreground uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Tanggal</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Kelas</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Materi</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Kehadiran</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Status</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Lampiran</th>
-                <th className="px-6 py-4 text-left text-sm text-foreground">Aksi</th>
+                <th className="px-5 py-4 text-left">Tanggal</th>
+                <th className="px-5 py-4 text-left">Kelas</th>
+                <th className="px-5 py-4 text-left">Materi & Subjek</th>
+                <th className="px-5 py-4 text-left">Status</th>
+                <th className="px-5 py-4 text-left">Lampiran</th>
+                <th className="px-5 py-4 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border text-sm text-foreground">
               {filteredReports.map((report) => (
-                <tr key={report.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {new Date(report.date).toLocaleDateString("id-ID")}
-                      </span>
+                <tr key={report.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2 text-xs font-semibold">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                      {new Date(report.date).toLocaleDateString("id-ID", { dateStyle: "medium" })}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{report.class}</td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm text-foreground">{report.topic}</p>
-                      <p className="text-xs text-muted-foreground">{report.subject}</p>
+                    <div className="text-[10px] text-muted-foreground mt-1">
+                      Dibuat: {new Date(report.createdAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
                     </div>
+                    {report.approvedAt && report.status === "Selesai" && (
+                      <div className="text-[10px] text-green-600 font-medium mt-0.5">
+                        Approved: {new Date(report.approvedAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{report.attendance}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        report.status === "Selesai"
-                          ? "bg-green-100 text-green-700"
-                          : report.status === "Menunggu Tinjauan"
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
+                  <td className="px-5 py-4 font-medium text-sm">{report.class}</td>
+                  <td className="px-5 py-4 max-w-[260px]">
+                    <p className="font-semibold text-sm truncate">{report.topic}</p>
+                    <p className="text-xs text-muted-foreground">{report.subject}</p>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle(report.status)}`}>
                       {report.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <FileText className="w-4 h-4" />
-                      {report.attachments}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                      <FileText className="w-3.5 h-3.5" /> {report.attachments}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-                        <Eye className="w-4 h-4 text-muted-foreground" />
+                  <td className="px-5 py-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => navigate(`/report/${report.id}`)}
+                        title="Lihat detail"
+                        className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
+                      >
+                        <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-                        <Edit className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-                        <Download className="w-4 h-4 text-muted-foreground" />
-                      </button>
+                      {report.status !== "Selesai" && (
+                        <>
+                          <button
+                            onClick={() => navigate(`/create-report?edit=${report.id}`)}
+                            title="Edit laporan"
+                            className="p-2 text-muted-foreground hover:text-orange-600 transition-colors rounded-lg hover:bg-orange-50"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(report.id)}
+                            disabled={deletingId === report.id}
+                            title="Hapus laporan"
+                            className="p-2 text-muted-foreground hover:text-red-600 transition-colors rounded-lg hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -194,108 +365,9 @@ export function ReportHistoryPage() {
             </tbody>
           </table>
         </div>
-
-        {isLoading ? (
-          <div className="p-12 text-center text-muted-foreground">
-            Memuat laporan...
-          </div>
-        ) : filteredReports.length === 0 && (
-          <div className="p-12 text-center">
-            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-foreground mb-2">Tidak ada laporan ditemukan</p>
-            <p className="text-sm text-muted-foreground">
-              Coba sesuaikan kriteria pencarian atau filter Anda
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Reports Cards - Mobile */}
-      <div className="md:hidden space-y-3">
-        {isLoading && (
-          <div className="p-12 text-center text-muted-foreground bg-card rounded-lg border border-border">
-            Memuat laporan...
-          </div>
-        )}
-        {filteredReports.map((report) => (
-          <div key={report.id} className="bg-card rounded-lg border border-border p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h4 className="text-sm font-medium text-foreground mb-1">{report.topic}</h4>
-                <p className="text-xs text-muted-foreground">{report.class} • {report.subject}</p>
-              </div>
-              <span
-                className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ml-2 ${
-                  report.status === "Selesai"
-                    ? "bg-green-100 text-green-700"
-                    : report.status === "Menunggu Tinjauan"
-                    ? "bg-orange-100 text-orange-700"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {report.status}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {new Date(report.date).toLocaleDateString("id-ID")}
-              </div>
-              <div className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                {report.attachments} berkas
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Link
-                to={`/report/${report.id}`}
-                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-xs"
-              >
-                <Eye className="w-3 h-3" />
-                Lihat
-              </Link>
-              <button className="flex items-center justify-center gap-1 px-3 py-2 bg-muted text-foreground rounded-lg text-xs">
-                <Edit className="w-3 h-3" />
-                Edit
-              </button>
-              <button className="flex items-center justify-center gap-1 px-3 py-2 bg-muted text-foreground rounded-lg text-xs">
-                <Download className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {(!isLoading && filteredReports.length === 0) && (
-        <div className="md:hidden p-12 text-center bg-card rounded-lg border border-border">
-          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-foreground mb-2">Tidak ada laporan ditemukan</p>
-          <p className="text-sm text-muted-foreground">
-            Coba sesuaikan kriteria pencarian atau filter Anda
-          </p>
-        </div>
       )}
 
-      {/* Pagination */}
-      {filteredReports.length > 0 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Menampilkan {filteredReports.length} dari {reports.length} laporan
-          </p>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              Sebelumnya
-            </button>
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">1</button>
-            <button className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors">
-              2
-            </button>
-            <button className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors">
-              Selanjutnya
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="h-4 md:h-0" />
     </div>
   );
 }

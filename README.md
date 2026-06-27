@@ -95,16 +95,86 @@ A modern, fully responsive web-based dashboard for teacher daily administration 
 - **Touch-Friendly**: Large buttons and adequate spacing
 - **Collapsible Sidebar**: Overlay menu on mobile
 
-## Getting Started
+## Cara Menjalankan Aplikasi (Getting Started)
 
-This is a Figma Make project. The development server runs automatically.
+Berikut adalah panduan instalasi dan menjalankan aplikasi **Edu Report** secara lokal di laptop/komputer Anda:
 
-## Browser Support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-- Tablet browsers
+### 📋 Prasyarat Sistem
+Pastikan Anda sudah menginstal:
+1. **Node.js** (versi 18 ke atas)
+2. **Package Manager** (`npm` atau `pnpm`)
+3. **MySQL Server** (XAMPP / Laragon / MySQL Standalone)
 
 ---
 
-© 2026 EduReport System. All rights reserved.
+### 🗄️ 1. Persiapan Database MySQL
+1. Jalankan **MySQL** Anda (misalnya melalui panel XAMPP Control Panel).
+2. Buka database manager pilihan Anda (phpMyAdmin / DBeaver / Navicat).
+3. Buat database baru bernama **`edureport`**:
+   ```sql
+   CREATE DATABASE edureport;
+   ```
+4. *Catatan:* Tabel database (`users`, `reports`) akan otomatis digenerate dan bermigrasi saat server backend dijalankan pertama kali!
+
+---
+
+### 💻 2. Menjalankan Server Backend (API & DB)
+1. Buka terminal baru dan masuk ke folder `server`:
+   ```bash
+   cd server
+   ```
+2. Instal semua dependensi server:
+   ```bash
+   npm install
+   ```
+3. Salin file konfigurasi `.env` (pastikan pengaturan DB_HOST, DB_USER, DB_PASSWORD, dan DB_NAME sudah sesuai dengan konfigurasi local MySQL Anda):
+   ```env
+   PORT=8080
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=
+   DB_NAME=edureport
+   ```
+4. Jalankan server backend:
+   ```bash
+   node index.js
+   ```
+   *Output sukses:* `🚀 Server berjalan di http://localhost:8080` dan `✅ Database siap!`
+
+---
+
+### 🌐 3. Menjalankan Server Frontend (UI)
+1. Buka terminal baru lagi dan pastikan berada di root folder utama proyek:
+   ```bash
+   cd ..
+   ```
+2. Instal dependensi frontend:
+   ```bash
+   npm install
+   # atau jika menggunakan pnpm:
+   pnpm install
+   ```
+3. Jalankan server lokal frontend:
+   ```bash
+   npm run dev
+   # atau jika menggunakan pnpm:
+   pnpm dev
+   ```
+4. Buka browser Anda dan akses tautan yang muncul (misalnya `http://localhost:5174/` atau `http://localhost:5173/`).
+
+---
+
+### 🔑 4. Akun Uji Coba (Tester Accounts)
+Untuk memudahkan pengujian alur kerja, silakan gunakan akun demo berikut:
+
+* **Akun Guru (Akses Input & Riwayat Laporan):**
+  - **Email:** `guru@sekolah.edu`
+  - **Kata Sandi:** `123456`
+* **Akun Kepala Sekolah (Akses Approval & Review):**
+  - **Email:** `kepsek@sekolah.edu`
+  - **Kata Sandi:** `123456`
+
+*(Anda juga dapat mendaftarkan akun baru secara mandiri melalui menu pendaftaran di halaman utama)*
+
+---
+© 2026 Edu Report System. All rights reserved.

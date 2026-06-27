@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { GraduationCap, Mail, Lock, User, Building, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { API_BASE_URL } from "../../lib/api";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -13,7 +14,10 @@ export function RegisterPage() {
     phone: "",
     school: "",
     department: "",
+    role: "teacher",
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -22,11 +26,10 @@ export function RegisterPage() {
     });
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validasi kecocokan password di frontend
     if (formData.password !== formData.confirmPassword) {
       toast.error("Kata sandi tidak cocok");
       return;
@@ -34,11 +37,15 @@ export function RegisterPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      // Pisahkan confirmPassword dari object yang akan dikirim ke API backend
+      const { confirmPassword, ...dataToSubmit } = formData;
+
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSubmit), // Mengirimkan objek data bersih
       });
+      
       const data = await res.json();
 
       if (!res.ok) {
@@ -48,7 +55,7 @@ export function RegisterPage() {
       toast.success("Pendaftaran berhasil! Silakan masuk.");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Terjadi kesalahan koneksi");
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +69,8 @@ export function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
             <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-foreground mb-2">Gabung EduReport</h1>
-          <p className="text-muted-foreground">Buat akun guru Anda</p>
+          <h1 className="text-foreground mb-2">Gabung Edu Report</h1>
+          <p className="text-muted-foreground">Buat akun Anda</p>
         </div>
 
         {/* Registration Form */}
@@ -156,6 +163,20 @@ export function RegisterPage() {
               </div>
 
               <div>
+                <label className="block text-sm text-foreground mb-2">Peran Akun</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                >
+                  <option value="teacher">Guru</option>
+                  <option value="principal">Kepala Sekolah</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm text-foreground mb-2">Kata Sandi</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -222,7 +243,7 @@ export function RegisterPage() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          © 2026 Sistem EduReport. Hak Cipta Dilindungi Undang-Undang.
+          © 2026 Sistem Edu Report.
         </p>
       </div>
     </div>

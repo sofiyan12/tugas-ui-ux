@@ -1,158 +1,221 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import { useState, useEffect } from "react";
+import { Outlet, useNavigate, Link, useLocation } from "react-router";
 import {
-  Home,
-  FileText,
+  LayoutDashboard,
+  FilePlus,
   History,
   GraduationCap,
-  UserCog,
+  Settings,
   LogOut,
   Menu,
   X,
-  Settings,
 } from "lucide-react";
-import { useState } from "react";
 import { MobileNav } from "./MobileNav";
-import { FloatingActionButton } from "./FloatingActionButton";
-import { NotificationBell } from "../ui/NotificationBell";
 
 export function DashboardLayout() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  const [user, setUser] = useState<{ name: string; department: string; role: string } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navItems = [
-    { path: "/", icon: Home, label: "Beranda" },
-    { path: "/create-report", icon: FileText, label: "Buat Laporan" },
-    { path: "/history", icon: History, label: "Riwayat Laporan" },
-    { path: "/grades", icon: GraduationCap, label: "Rekap Nilai" },
-    { path: "/principal", icon: UserCog, label: "Tampilan Kepala Sekolah" },
-    { path: "/settings", icon: Settings, label: "Pengaturan" },
-  ];
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      navigate("/login");
+      return;
+    }
+    setUser(JSON.parse(storedUser));
+  }, [navigate]);
+
+  // Tutup sidebar otomatis kalau pindah halaman
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Tutup sidebar kalau tekan Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  // Cegah scroll body saat sidebar mobile terbuka
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
-  return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Mobile Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+  if (!user) return null;
 
-      {/* Sidebar */}
-      <aside
-        className={`${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:relative w-64 bg-sidebar transition-transform duration-300 flex-shrink-0 z-50 h-full`}
-      >
-        <div className="h-full flex flex-col">
-          {/* Logo */}
-          <div className="p-6 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-sidebar-foreground">EduReport</h1>
-                <p className="text-xs text-sidebar-foreground/70">Portal Guru</p>
-              </div>
-            </div>
-          </div>
+  const getDepartmentName = (dept: string, role?: string) => {
+    if (role === "principal") return "Kepala Sekolah";
+    const maps: Record<string, string> = {
+      mathematics: "Guru Matematika",
+      science: "Guru Sains",
+      english: "Guru Bahasa Inggris",
+      history: "Guru Sejarah",
+      arts: "Guru Seni",
+      "physical-education": "Guru Penjas",
+      other: "Guru",
+    };
+    return maps[dept] || "Guru Pengajar";
+  };
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+  const navLinks = [
+    ...(user?.role === "principal"
+      ? [{ to: "/principal", icon: LayoutDashboard, label: "Dasbor Kepala Sekolah" }]
+      : [
+          { to: "/", icon: LayoutDashboard, label: "Beranda" },
+          { to: "/create-report", icon: FilePlus, label: "Buat Laporan" },
+          { to: "/history", icon: History, label: "Riwayat Laporan" },
+        ]),
+    { to: "/settings", icon: Settings, label: "Pengaturan" },
+  ];
 
-          {/* User Info */}
-          <div className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-sidebar-accent rounded-full flex items-center justify-center">
-                <span className="text-sidebar-foreground">JD</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-sidebar-foreground">Jane Doe</p>
-                <p className="text-xs text-sidebar-foreground/70">Guru Matematika</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sidebar-foreground/80 hover:bg-sidebar-accent/50 rounded-lg transition-colors"
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-2 py-4 border-b border-blue-800 mb-6">
+        <GraduationCap className="w-8 h-8 text-blue-300 shrink-0" />
+        <div>
+          <h2 className="text-lg font-bold leading-none">Edu Report</h2>
+          <span className="text-xs text-blue-300">Portal Guru</span>
+        </div>
+      </div>
+
+      {/* Nav Links */}
+      <nav className="space-y-1 flex-1">
+        {navLinks.map(({ to, icon: Icon, label }) => {
+          const isActive = location.pathname === to;
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-blue-800 text-white"
+                  : "text-blue-200 hover:bg-blue-800/50 active:bg-blue-800/70"
+              }`}
             >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm">Keluar</span>
-            </button>
+              <Icon className="w-5 h-5 shrink-0" />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User Profile + Logout */}
+      <div className="border-t border-blue-800 pt-4 space-y-3 mt-auto">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center font-bold text-blue-100 uppercase shrink-0">
+            {user.name.substring(0, 2)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{user.name}</p>
+            <p className="text-xs text-blue-300 truncate">
+              {getDepartmentName(user.department, user.role)}
+            </p>
           </div>
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-red-300 hover:bg-red-950/40 hover:text-red-200 transition-colors"
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          Keluar
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-background">
+
+      {/* ── DESKTOP SIDEBAR (hidden on mobile) ── */}
+      <aside className="hidden md:flex w-64 bg-blue-900 text-white flex-col p-4 shrink-0">
+        <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navbar */}
-        <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      {/* ── MOBILE SIDEBAR OVERLAY ── */}
+      {/* Backdrop */}
+      <div
+        aria-hidden="true"
+        onClick={() => setSidebarOpen(false)}
+        className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* Drawer */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-[70] w-72 max-w-[85vw] bg-blue-900 text-white flex flex-col p-4
+          transform transition-transform duration-300 ease-in-out md:hidden
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
+        aria-label="Menu navigasi"
+      >
+        {/* Tombol tutup di sudut kanan atas drawer */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Tutup menu"
+          className="absolute top-4 right-4 p-2 rounded-lg text-blue-300 hover:bg-blue-800 hover:text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <SidebarContent />
+      </aside>
+
+      {/* ── MAIN CONTENT ── */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Header */}
+        <header className="bg-white border-b border-border h-16 flex items-center justify-between px-4 md:px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Hamburger — hanya muncul di mobile */}
             <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-accent rounded-lg transition-colors"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka menu"
+              className="md:hidden p-2 -ml-2 rounded-lg text-foreground hover:bg-slate-100 transition-colors"
             >
-              {isSidebarOpen ? (
-                <X className="w-5 h-5 text-foreground" />
-              ) : (
-                <Menu className="w-5 h-5 text-foreground" />
-              )}
+              <Menu className="w-6 h-6" />
             </button>
-            <div>
-              <h2 className="text-foreground">
-                {navItems.find((item) => item.path === location.pathname)?.label || "Beranda"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
+
+            <h1 className="text-base md:text-lg font-semibold text-foreground">
+              {navLinks.find((n) => n.to === location.pathname)?.label ?? "Beranda"}
+            </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            <NotificationBell />
+          <div className="text-xs md:text-sm text-muted-foreground font-medium">
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 lg:pb-6">
+        {/* pb-20 beri ruang untuk MobileNav di bawah */}
+        <main className="flex-1 overflow-y-auto bg-slate-50 pb-20 md:pb-0">
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* ── MOBILE BOTTOM NAV ── */}
       <MobileNav />
-
-      {/* Floating Action Button */}
-      <FloatingActionButton />
     </div>
   );
 }

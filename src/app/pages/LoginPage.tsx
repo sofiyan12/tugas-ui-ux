@@ -1,37 +1,42 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { GraduationCap, Mail, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { API_BASE_URL } from "../../lib/api";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.error || "Gagal masuk");
       }
 
-      // Store user data in localStorage for simplicity
+      // Menyimpan data session user asli ke localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
+
+      toast.success("Login berhasil! Selamat datang kembali.");
+
+      // Redirect berdasarkan role
+      const destination = data.user.role === "principal" ? "/principal" : "/";
+      setTimeout(() => navigate(destination), 1000);
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Terjadi kesalahan koneksi ke server");
     } finally {
       setIsLoading(false);
     }
@@ -45,13 +50,12 @@ export function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
             <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-foreground mb-2">Sistem EduReport</h1>
-          <p className="text-muted-foreground">Portal Pelaporan Harian Guru</p>
+          <h1 className="text-foreground mb-2">Edu Report</h1>
+          <p className="text-muted-foreground">Masuk ke Akun Anda</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-card rounded-2xl shadow-xl p-8">
-          <h2 className="text-foreground mb-6 text-center">Masuk</h2>
+        <div className="bg-card rounded-2xl shadow-xl p-6 md:p-8">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm text-foreground mb-2">Alamat Email</label>
@@ -69,7 +73,9 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-foreground mb-2">Kata Sandi</label>
+              <div className="mb-2">
+                <label className="text-sm text-foreground">Kata Sandi</label>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -81,28 +87,15 @@ export function LoginPage() {
                   required
                 />
               </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 text-primary rounded" />
-                <span className="text-muted-foreground">Ingat saya</span>
-              </label>
-              <a href="#" className="text-primary hover:underline">
-                Lupa kata sandi?
-              </a>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-                {error}
+              <div className="flex justify-end mt-1.5">
+                <a href="#" className="text-xs text-primary hover:underline">Lupa sandi?</a>
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium"
             >
               {isLoading ? "Memproses..." : "Masuk"}
             </button>
@@ -117,10 +110,6 @@ export function LoginPage() {
             </p>
           </div>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          © 2026 Sistem EduReport. Hak Cipta Dilindungi Undang-Undang.
-        </p>
       </div>
     </div>
   );
