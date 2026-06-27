@@ -133,4 +133,3 @@ Untuk mempermudah proses demonstrasi alur kerja aplikasi oleh dosen penguji, sil
 - **Password**: `123456`
 
 ---
-*Dikembangkan oleh **Sofiyan Hadi** — Tugas Akhir UI/UX & Web Development Proyek SMKS Fajar Indah (2026).*
