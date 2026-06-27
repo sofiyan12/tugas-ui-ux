@@ -1,133 +1,91 @@
-# EduReport - Teacher Daily Reporting System
+# 🎓 Edu Report — Portal Pelaporan Harian Guru
 
-A modern, fully responsive web-based dashboard for teacher daily administration and reporting.
-
-## Features
-
-### Core Functionality
-- **Teacher Dashboard** - Overview with KPI cards, recent reports, and upcoming tasks
-- **Daily Report Creation** - Comprehensive form with auto-save functionality
-- **Report History** - Searchable and filterable report archive
-- **Grade Recap** - Student performance analytics with charts
-- **Principal Dashboard** - School-wide monitoring and reporting
-- **Settings** - Profile, notifications, security, and preferences management
-
-### File Upload Support
-- PDF documents
-- DOCX files
-- PPTX presentations
-- Images (JPG, PNG)
-- Google Drive links
-- YouTube/video links
-
-### Sharing Options
-- One-click WhatsApp sharing
-- Email integration
-- Principal dashboard sharing
-
-### Responsive Design
-- **Desktop**: Sidebar navigation, full table views, multi-column layouts
-- **Tablet**: Adaptive grid layouts, responsive cards
-- **Mobile**: Bottom navigation bar, floating action button, card-based layouts, touch-friendly interfaces
-
-## Design System
-
-### Color Palette
-- **Primary**: Soft Blue (#3b82f6)
-- **Secondary**: Light Blue (#e0f2fe)
-- **Background**: Off-white (#f8fafc)
-- **Card**: White (#ffffff)
-- **Success**: Green (#10b981)
-- **Warning**: Orange (#f59e0b)
-- **Error**: Red (#ef4444)
-
-### Typography
-- Clean, readable fonts
-- Responsive text sizes
-- Consistent spacing
-
-### Components
-- Responsive cards
-- Status badges
-- Progress bars
-- Auto-save indicators
-- Mobile navigation
-- Floating action button
-- Data tables (desktop) / Card views (mobile)
-
-## Pages
-
-1. **Login Page** - Secure authentication
-2. **Register Page** - New teacher registration
-3. **Teacher Dashboard** - Main overview and quick actions
-4. **Create Report Page** - Daily report form with attachments
-5. **Report History Page** - Archive with search and filters
-6. **Report Detail Page** - Full report view with actions
-7. **Grade Recap Page** - Analytics and performance tracking
-8. **Principal Dashboard** - School-wide monitoring
-9. **Settings Page** - Account and preference management
-
-## User Experience Goals
-
-- Minimize repetitive input
-- Fast report creation
-- Easy archive retrieval
-- Support for non-tech-savvy teachers
-- Auto-save functionality
-- Mobile-friendly touch interfaces
-- Intuitive navigation
-
-## Technical Stack
-
-- React 18.3.1
-- React Router 7.13.0
-- Tailwind CSS 4.1.12
-- Recharts 2.15.2
-- Lucide React Icons
-- Sonner Toast Notifications
-- TypeScript
-
-## Mobile Features
-
-- **Bottom Navigation**: Quick access to main sections
-- **Floating Action Button**: Fast report creation
-- **Responsive Tables**: Convert to cards on mobile
-- **Touch-Friendly**: Large buttons and adequate spacing
-- **Collapsible Sidebar**: Overlay menu on mobile
-
-## Cara Menjalankan Aplikasi (Getting Started)
-
-Berikut adalah panduan instalasi dan menjalankan aplikasi **Edu Report** secara lokal di laptop/komputer Anda:
-
-### 📋 Prasyarat Sistem
-Pastikan Anda sudah menginstal:
-1. **Node.js** (versi 18 ke atas)
-2. **Package Manager** (`npm` atau `pnpm`)
-3. **MySQL Server** (XAMPP / Laragon / MySQL Standalone)
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61dafb" alt="React" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+</p>
 
 ---
 
-### 🗄️ 1. Persiapan Database MySQL
-1. Jalankan **MySQL** Anda (misalnya melalui panel XAMPP Control Panel).
-2. Buka database manager pilihan Anda (phpMyAdmin / DBeaver / Navicat).
-3. Buat database baru bernama **`edureport`**:
+**Edu Report** adalah sebuah platform berbasis web (*responsive multi-device*) yang dirancang khusus untuk memodernisasi sistem pelaporan administrasi harian guru di **SMKS Fajar Indah**. Solusi ini menggantikan metode pelaporan konvensional berbasis *screenshot* galeri HP yang kurang efisien menjadi sistem input digital yang cepat, aman, terintegrasi *cloud*, serta mendukung pengawasan langsung (*review & approval*) oleh Kepala Sekolah.
+
+---
+
+## 🌟 Fitur Utama
+
+### 🧑‍🏫 Portal Guru (Teacher Hub)
+- **Dasbor Statistik Dinamis**: Pantau status laporan (Draf, Menunggu Review, Selesai) dalam bentuk KPI visual yang modern.
+- **Form Input Terstruktur**: Mengisi detail kegiatan mengajar, tugas siswa, hambatan, hingga rencana pembelajaran berikutnya tanpa *screenshot* manual.
+- **Auto-Save & Draft**: Melindungi data laporan guru agar tidak hilang secara tidak sengaja sebelum dikirim.
+- **Riwayat Pelaporan & Filter**: Cari data laporan lama berdasarkan rentang tanggal, mata pelajaran, atau kelas secara instan.
+- **Cetak PDF Resmi**: Ekspor berkas laporan menjadi file PDF berformat standar cetak resmi dalam satu klik.
+- **One-Click Share**: Bagikan link review laporan langsung ke WhatsApp atau Email dengan templat teks yang otomatis terisi.
+
+### 🏫 Portal Kepala Sekolah (Principal Dashboard)
+- **Monitoring Terpusat**: Lihat performa administrasi pengumpulan laporan dari seluruh guru secara berkala.
+- **Sistem Verifikasi (Approve/Reject)**: Terima laporan dengan melampirkan jam audit (*approval timestamp*) atau tolak dengan menambahkan catatan umpan balik (*review note*).
+- **Akses Dokumen Lampiran**: Kepala sekolah dapat mengunduh secara langsung file pendukung (PDF, DOCX, gambar) atau meninjau tautan link (G-Drive, YouTube) yang disertakan guru di modal tinjauan.
+
+### 📱 Desain Responsif & Ramah Seluler (Mobile Optimization)
+- **Navigasi Bawah Seluler (Bottom Nav)**: Memudahkan pengoperasian satu tangan di HP.
+- **Drawer Profil & Tombol Floating Action (FAB)**: Arahkan ke menu utama dan pembuatan laporan dengan cepat.
+
+---
+
+## 🏗️ Struktur Folder Proyek
+
+```text
+├── server/               # Server Backend (API RESTful)
+│   ├── index.js          # Entrypoint & Inisialisasi Database Otomatis
+│   ├── package.json      # Node Packages Backend
+│   └── uploads/          # Folder Penyimpanan File Lampiran Guru (Gambar & Dokumen)
+│
+├── src/                  # Client Frontend (UI Portal)
+│   ├── app/
+│   │   ├── components/   # Komponen Global (Layout, Sidebar, MobileNav)
+│   │   ├── pages/        # Halaman Utama (Login, Register, Dashboard, History, Settings)
+│   │   └── routes.tsx    # Manajemen Rute Halaman
+│   └── lib/
+│       └── api.ts        # Konfigurasi Koneksi API / Axios client
+│
+├── .gitignore            # File Pengecualian Unggahan Git
+├── package.json          # Node Packages Frontend
+└── README.md             # Dokumentasi Proyek Utama
+```
+
+---
+
+## 🚀 Panduan Menjalankan Aplikasi Secara Lokal (Getting Started)
+
+Ikuti langkah-langkah di bawah ini untuk menginstal dan menjalankan proyek di komputer/laptop Anda:
+
+### 📋 1. Prasyarat Sistem
+Pastikan perangkat Anda telah terpasang:
+- **Node.js** (versi 18.0.0 atau yang lebih baru)
+- **MySQL Server** (XAMPP, Laragon, atau MySQL Standalone)
+- Browser modern (Google Chrome, Microsoft Edge, Mozilla Firefox)
+
+### 🗄️ 2. Persiapan Database MySQL
+1. Aktifkan modul **MySQL** di panel control database Anda (misalnya XAMPP).
+2. Buka database manager pilihan Anda (phpMyAdmin, DBeaver, dll) dan jalankan SQL berikut untuk membuat database baru:
    ```sql
    CREATE DATABASE edureport;
    ```
-4. *Catatan:* Tabel database (`users`, `reports`) akan otomatis digenerate dan bermigrasi saat server backend dijalankan pertama kali!
+3. *Catatan:* Tabel-tabel yang diperlukan (`users` & `reports`) beserta kolom pendukungnya akan otomatis dibuat saat Anda menjalankan server backend pertama kali.
 
----
-
-### 💻 2. Menjalankan Server Backend (API & DB)
-1. Buka terminal baru dan masuk ke folder `server`:
+### 💻 3. Jalankan Server Backend
+1. Buka terminal baru, navigasikan ke direktori server:
    ```bash
    cd server
    ```
-2. Instal semua dependensi server:
+2. Instal semua dependensi:
    ```bash
    npm install
    ```
-3. Salin file konfigurasi `.env` (pastikan pengaturan DB_HOST, DB_USER, DB_PASSWORD, dan DB_NAME sudah sesuai dengan konfigurasi local MySQL Anda):
+3. Buat file `.env` di dalam folder `server` dan sesuaikan kredensial database Anda:
    ```env
    PORT=8080
    DB_HOST=localhost
@@ -135,46 +93,44 @@ Pastikan Anda sudah menginstal:
    DB_PASSWORD=
    DB_NAME=edureport
    ```
-4. Jalankan server backend:
+4. Jalankan backend:
    ```bash
    node index.js
    ```
-   *Output sukses:* `🚀 Server berjalan di http://localhost:8080` dan `✅ Database siap!`
+   *Output yang diharapkan:*
+   ```text
+   ✅ Database siap!
+   🚀 Server berjalan di http://localhost:8080
+   ```
 
----
-
-### 🌐 3. Menjalankan Server Frontend (UI)
-1. Buka terminal baru lagi dan pastikan berada di root folder utama proyek:
+### 🌐 4. Jalankan Server Frontend
+1. Buka terminal baru lainnya, pastikan Anda berada di direktori utama (root folder):
    ```bash
    cd ..
    ```
 2. Instal dependensi frontend:
    ```bash
    npm install
-   # atau jika menggunakan pnpm:
-   pnpm install
    ```
-3. Jalankan server lokal frontend:
+3. Jalankan aplikasi frontend:
    ```bash
    npm run dev
-   # atau jika menggunakan pnpm:
-   pnpm dev
    ```
-4. Buka browser Anda dan akses tautan yang muncul (misalnya `http://localhost:5174/` atau `http://localhost:5173/`).
+4. Aplikasi akan berjalan di alamat `http://localhost:5174/` (atau port default lainnya yang tampil di terminal). Buka alamat tersebut di Google Chrome Anda.
 
 ---
 
-### 🔑 4. Akun Uji Coba (Tester Accounts)
-Untuk memudahkan pengujian alur kerja, silakan gunakan akun demo berikut:
+## 🔑 Kredensial Uji Coba (Tester Accounts)
 
-* **Akun Guru (Akses Input & Riwayat Laporan):**
-  - **Email:** `guru@sekolah.edu`
-  - **Kata Sandi:** `123456`
-* **Akun Kepala Sekolah (Akses Approval & Review):**
-  - **Email:** `kepsek@sekolah.edu`
-  - **Kata Sandi:** `123456`
+Untuk mempermudah proses demonstrasi alur kerja aplikasi oleh dosen penguji, silakan gunakan akun bawaan berikut:
 
-*(Anda juga dapat mendaftarkan akun baru secara mandiri melalui menu pendaftaran di halaman utama)*
+### 🧑‍🏫 Akun Guru (Role: Teacher)
+- **Surel (Email)**: `guru@sekolah.edu`
+- **Kata Sandi (Password)**: `123456`
+
+### 🏫 Akun Kepala Sekolah (Role: Principal)
+- **Surel (Email)**: `kepsek@sekolah.edu`
+- **Kata Sandi (Password)**: `123456`
 
 ---
-© 2026 Edu Report System. All rights reserved.
+*Dikembangkan oleh **Sofiyan Hadi** — Tugas Akhir UI/UX & Web Development Proyek SMKS Fajar Indah (2026).*
