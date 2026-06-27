@@ -1,0 +1,145 @@
+{
+  "content": {
+    "contact_information": {
+      "name": "SOFIYAN HADI",
+      "email": "sofiyanhadi12@gmail.com",
+      "phone": "(+62) 8966-5118-111",
+      "location": "Jakarta, Indonesia",
+      "linkedin": "https://linkedin.com/in/sofiyan12"
+    },
+
+    "experience": [
+      {
+        "company": "PT. Prima Data Semesta (Onsite ICON Plus)",
+        "role": "QA Engineer (Middle Level)",
+        "duration": "August 2024 – Present",
+        "location": "Jakarta",
+        "responsibilities": [
+          "Focused on functional, negative, and monkey testing to ensure product reliability under expected and edge-case scenarios.",
+          "Built blueprints and BRDs for multiple applications including Bag Daily, eTransport, iSPPD, eTravel, and SSO.",
+          "Designed and executed stress and load testing using JMeter, analyzing metrics such as response time, throughput, and error rates.",
+          "Created API automation suites using Postman and Newman, reducing manual regression effort.",
+          "Produced flowcharts and technical documentation for development and business teams.",
+          "Reported bugs with structured details including reproduction steps, impact, and priority."
+        ]
+      },
+
+      {
+        "company": "PT. Mega Giga Solusindo (Onsite ICON Plus)",
+        "role": "Quality Assurance",
+        "duration": "March 2022 – August 2023",
+        "location": "Jakarta",
+        "responsibilities": [
+          "Created bug reports in Jira with complete reproduction steps and follow-up tracking.",
+          "Performed API testing using Postman and conducted early stress/load testing using JMeter.",
+          "Executed functional and negative testing to identify hidden defects early."
+        ]
+      },
+
+      {
+        "company": "Cocofun",
+        "role": "Content Auditor",
+        "duration": "January 2020 – August 2020",
+        "location": "Remote",
+        "responsibilities": [
+          "Reviewed large volumes of multimedia content with high attention to detail.",
+          "Documented and classified policy violations with structured reporting."
+        ]
+      }
+    ],
+
+    "projects": [
+      {
+        "name": "iOffice",
+        "tools": [
+          "Postman",
+          "JMeter",
+          "Jira",
+          "Google Docs",
+          "MySQL"
+        ],
+        "link": "https://bit.ly/Ioffice",
+        "description": "HR and workforce management system for attendance, leave requests, and personnel management. Performed functional and regression testing, API automation, JMeter performance testing, and bug tracking."
+      },
+
+      {
+        "name": "Bag Daily (Tailored iOffice – SPPD & eTransport)",
+        "tools": [
+          "Postman",
+          "JMeter",
+          "BlazeMeter",
+          "Jira",
+          "Google Docs"
+        ],
+        "description": "Customized enterprise application with SPPD and eTransport modules. Created BRDs and blueprints, performed functional and negative testing, API automation, and load/stress testing."
+      },
+
+      {
+        "name": "SSO IAM",
+        "tools": [
+          "JMeter",
+          "Jira",
+          "Confluence",
+          "Google Docs"
+        ],
+        "description": "Single Sign-On platform with centralized authentication and role-based access management. Documented authorization flows, validated APIs, executed performance testing, and handled bug reporting."
+      }
+    ],
+
+    "skills": {
+      "software_testing_and_automation": [
+        "Functional Testing",
+        "Regression Testing",
+        "UAT",
+        "Exploratory Testing",
+        "Negative Testing",
+        "API Testing",
+        "API Automation",
+        "Performance Testing",
+        "Stress Testing",
+        "Load Testing"
+      ],
+
+      "tools_and_collaboration": [
+        "Postman",
+        "Newman",
+        "JMeter",
+        "BlazeMeter",
+        "Jira",
+        "Confluence"
+      ],
+
+      "documentation": [
+        "BRD",
+        "Blueprint",
+        "Test Plan",
+        "Flowchart",
+        "Manual Book"
+      ],
+
+      "programming_and_database": [
+        "Java",
+        "Python",
+        "JavaScript",
+        "MySQL"
+      ]
+    },
+
+    "education": [
+      {
+        "institution": "Yarsi University",
+        "years": "2017 – Present",
+        "major": "Computer Science",
+        "location": "Jakarta",
+        "status": "Undergraduate (ongoing)"
+      },
+
+      {
+        "institution": "SMAN 92",
+        "years": "2014 – 2017",
+        "major": "Social Sciences",
+        "location": "Jakarta"
+      }
+    ]
+  }
+}
